@@ -18,7 +18,7 @@ classifier = VoiceClassifier()
 
 class AudioRequest(BaseModel):
     audio_base64: str = Field(..., description="Base64 encoded MP3 audio string")
-    language: str = Field(..., description="Language of the audio (Tamil, English, Hindi, Malayalam, Telugu)")
+    language: str = Field(..., description="Language of the audio (Tamil, English, Hindi, Malayalam, Telugu, Kannada)")
 
 class AudioResponse(BaseModel):
     classification: str
@@ -36,7 +36,7 @@ async def detect_voice(request: AudioRequest):
     Analyzes the uploaded audio and returns whether it is AI-generated or Human.
     """
     # Validate language
-    supported_languages = ["tamil", "english", "hindi", "malayalam", "telugu"]
+    supported_languages = ["tamil", "english", "hindi", "malayalam", "telugu", "kannada"]
     if request.language.lower() not in supported_languages:
         # We can just warn or proceed, but let's strictly validate for now or just allow it.
         # The prompt says "Voice samples will be provided in five languages", implying these are the expected ones.

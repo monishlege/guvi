@@ -1,6 +1,6 @@
 # AI-Generated Voice Detection System
 
-This project is an API-based system designed to detect whether a voice sample is AI-generated or Human-generated. It supports multiple languages (Tamil, English, Hindi, Malayalam, Telugu) and accepts Base64-encoded MP3 audio inputs.
+This project is an API-based system designed to detect whether a voice sample is AI-generated or Human-generated. It supports multiple languages (Tamil, English, Hindi, Malayalam, Telugu, Kannada) and accepts Base64-encoded MP3 audio inputs.
 
 ## Features
 

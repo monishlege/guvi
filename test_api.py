@@ -30,8 +30,8 @@ def create_dummy_audio_base64():
     audio_b64 = base64.b64encode(buffer.read()).decode('utf-8')
     return audio_b64
 
-def test_detection():
-    url = "http://localhost:8000/detect"
+def test_detection(language="English", port=8001, timeout=60):
+    url = f"http://localhost:{port}/detect"
     
     print("Generating dummy audio...")
     try:
@@ -42,12 +42,12 @@ def test_detection():
 
     payload = {
         "audio_base64": audio_b64,
-        "language": "English"
+        "language": language
     }
     
-    print(f"Sending request to {url}...")
+    print(f"Sending request to {url} with language={language}...")
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=timeout)
         
         print(f"Status Code: {response.status_code}")
         if response.status_code == 200:
@@ -61,4 +61,8 @@ def test_detection():
         print(f"Request failed: {e}")
 
 if __name__ == "__main__":
-    test_detection()
+    import sys
+    lang = "English"
+    if len(sys.argv) > 1:
+        lang = sys.argv[1]
+    test_detection(language=lang)
