@@ -50,18 +50,30 @@ async def root(request: Request, format: str | None = None):
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <title>AI Voice Detection</title>
       <style>
-        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 2rem; }
-        .card { max-width: 800px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        h1 { font-size: 1.6rem; margin-bottom: 1rem; }
-        label { display: block; margin: .5rem 0 .25rem; font-weight: 600; }
-        input[type=file], select, textarea { width: 100%; padding: .5rem; border: 1px solid #ccc; border-radius: 6px; }
-        button { margin-top: 1rem; padding: .6rem 1rem; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
-        button:disabled { background: #9aa7c7; cursor: not-allowed; }
-        pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow: auto; }
+        :root { color-scheme: dark; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; min-height: 100vh; padding: 3rem 2rem; background: linear-gradient(135deg, #0b1220 0%, #101826 50%, #0b1220 100%); background-size: 200% 200%; animation: gradientShift 18s ease infinite; display: flex; align-items: center; color: #e2e8f0; }
+        .card { max-width: 900px; margin: 0 auto; border-radius: 18px; padding: 2rem; backdrop-filter: blur(14px) saturate(160%); background: rgba(15,23,42,0.55); border: 1px solid rgba(99,102,241,0.35); box-shadow: 0 10px 30px rgba(2,6,23,0.6), 0 0 20px rgba(99,102,241,0.2); }
+        h1 { font-size: 2rem; margin-bottom: 1rem; letter-spacing: .02em; color: #000000; }
+        label { display: block; margin: .6rem 0 .3rem; font-weight: 700; color: #cbd5e1; }
+        input[type=file], select, textarea { width: 100%; padding: .75rem .9rem; border: 1px solid rgba(148,163,184,0.25); border-radius: 14px; background: rgba(2,6,23,0.6); color: #e2e8f0; box-shadow: inset 0 1px 6px rgba(2,6,23,0.3); }
+        input[type=file]:focus, select:focus, textarea:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,0.25); }
+        button { margin-top: 1rem; padding: .85rem 1.2rem; border: none; border-radius: 14px; background: linear-gradient(90deg, #3b82f6, #8b5cf6); color: #fff; cursor: pointer; box-shadow: 0 12px 24px rgba(59,130,246,0.35), 0 0 16px rgba(139,92,246,0.35); transition: transform .18s ease, box-shadow .18s ease; }
+        button:hover { transform: translateY(-1px); box-shadow: 0 16px 30px rgba(59,130,246,0.5), 0 0 22px rgba(139,92,246,0.45); }
+        button:disabled { background: linear-gradient(90deg,#64748b,#475569); cursor: not-allowed; box-shadow: none; }
+        .dialog { border-radius: 18px; border: 1px solid rgba(99,102,241,0.35); background: rgba(2,6,23,0.75); box-shadow: 0 10px 28px rgba(2,6,23,0.55), 0 0 20px rgba(99,102,241,0.18); }
+        .dialog-header { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; border-bottom: 1px solid rgba(148,163,184,0.2); }
+        .badge { padding: .35rem .6rem; border-radius: 999px; font-size: .85rem; background: linear-gradient(90deg,#22d3ee,#a78bfa); color: #0b1220; }
+        .badge--ai { background: linear-gradient(90deg,#ef4444,#f59e0b); color: #0b1220; }
+        .badge--human { background: linear-gradient(90deg,#10b981,#22d3ee); color: #0b1220; }
+        .dialog-body { padding: .9rem 1rem; }
+        .summary { color: #cbd5e1; margin-bottom: .5rem; }
+        pre { background: rgba(2,6,23,0.9); color: #e2e8f0; padding: 1rem; border-radius: 14px; overflow: auto; border: 1px solid rgba(99,102,241,0.35); box-shadow: 0 0 0 1px rgba(99,102,241,0.25) inset, 0 8px 24px rgba(59,130,246,0.25), 0 0 16px rgba(139,92,246,0.2); }
+        #copy { margin-left: auto; padding: .6rem .85rem; border: none; border-radius: 12px; background: linear-gradient(90deg, #22d3ee, #a78bfa); color: #0b1220; cursor: pointer; box-shadow: 0 8px 18px rgba(34,211,238,0.35), 0 0 12px rgba(167,139,250,0.3); }
         .row { display: grid; grid-template-columns: 1fr; gap: 1rem; }
         @media (min-width: 640px) { .row { grid-template-columns: 1fr 1fr; } }
-        .small { font-size: .85rem; color: #555; }
-        .links a { margin-right: .75rem; }
+        .small { font-size: .95rem; color: #94a3b8; }
+        .links a { margin-right: .75rem; color: #93c5fd; text-decoration: none; }
       </style>
     </head>
     <body>
@@ -92,7 +104,16 @@ async def root(request: Request, format: str | None = None):
         </div>
         <button id="send">Detect</button>
         <div id="out" style="margin-top:1rem;">
-          <pre id="result">{ "status": "waiting for input" }</pre>
+          <div class="dialog">
+            <div class="dialog-header">
+              <span id="status-badge" class="badge">Ready</span>
+              <button id="copy">Copy</button>
+            </div>
+            <div class="dialog-body">
+              <div class="summary" id="summary-text">Awaiting input</div>
+              <pre id="result">{ "status": "ready" }</pre>
+            </div>
+          </div>
         </div>
         <p class="small">Or paste Base64 audio below (optional):</p>
         <textarea id="base64" rows="4" placeholder="Base64 audio string"></textarea>
@@ -132,6 +153,26 @@ async def root(request: Request, format: str | None = None):
           }
         }
         document.getElementById('send').addEventListener('click', detect);
+        document.getElementById('copy').addEventListener('click', async () => {
+          const txt = document.getElementById('result').textContent;
+          try { await navigator.clipboard.writeText(txt); } catch(e) {}
+        });
+        function renderSummary(obj) {
+          const badge = document.getElementById('status-badge');
+          const summary = document.getElementById('summary-text');
+          badge.className = 'badge';
+          if (obj && typeof obj === 'object' && obj.classification) {
+            const cls = String(obj.classification);
+            const conf = typeof obj.confidence_score === 'number' ? Math.round(obj.confidence_score * 100) / 100 : obj.confidence_score;
+            summary.textContent = `${cls} • ${conf}`;
+            badge.textContent = cls;
+            if (/AI-Generated/i.test(cls)) badge.className = 'badge badge--ai';
+            if (/Human/i.test(cls)) badge.className = 'badge badge--human';
+          } else {
+            summary.textContent = 'Response';
+            badge.textContent = 'JSON';
+          }
+        }
       </script>
     </body>
     </html>
@@ -154,17 +195,29 @@ def app_page():
       <title>AI Voice Detection</title>
       <link rel="manifest" href="/manifest.json">
       <style>
-        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 2rem; }
-        .card { max-width: 720px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        h1 { font-size: 1.4rem; margin-bottom: 1rem; }
-        label { display: block; margin: .5rem 0 .25rem; font-weight: 600; }
-        input[type=file], select, textarea { width: 100%; padding: .5rem; border: 1px solid #ccc; border-radius: 6px; }
-        button { margin-top: 1rem; padding: .6rem 1rem; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
-        button:disabled { background: #9aa7c7; cursor: not-allowed; }
-        pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow: auto; }
+        :root { color-scheme: dark; }
+        @keyframes floatbg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; min-height: 100vh; padding: 2.5rem 2rem; background: linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #0b1220 100%); background-size: 200% 200%; animation: floatbg 18s ease-in-out infinite; display: flex; align-items: center; color: #e2e8f0; }
+        .card { max-width: 760px; margin: 0 auto; border-radius: 18px; padding: 2rem; backdrop-filter: blur(12px) saturate(160%); background: rgba(15,23,42,0.55); border: 1px solid rgba(99,102,241,0.35); box-shadow: 0 10px 30px rgba(2,6,23,0.6), 0 0 20px rgba(99,102,241,0.2); }
+        h1 { font-size: 1.8rem; margin-bottom: 1rem; letter-spacing: .02em; color: #000000; }
+        label { display: block; margin: .6rem 0 .3rem; font-weight: 700; color: #cbd5e1; }
+        input[type=file], select, textarea { width: 100%; padding: .75rem .9rem; border: 1px solid rgba(148,163,184,0.25); border-radius: 14px; background: rgba(2,6,23,0.6); color: #e2e8f0; box-shadow: inset 0 1px 6px rgba(2,6,23,0.3); }
+        input[type=file]:focus, select:focus, textarea:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,0.25); }
+        button { margin-top: 1rem; padding: .85rem 1.2rem; border: none; border-radius: 14px; background: linear-gradient(90deg, #3b82f6, #8b5cf6); color: #fff; cursor: pointer; box-shadow: 0 12px 24px rgba(59,130,246,0.35), 0 0 16px rgba(139,92,246,0.35); transition: transform .18s ease, box-shadow .18s ease; }
+        button:hover { transform: translateY(-1px); box-shadow: 0 16px 30px rgba(59,130,246,0.5), 0 0 22px rgba(139,92,246,0.45); }
+        button:disabled { background: linear-gradient(90deg,#64748b,#475569); cursor: not-allowed; box-shadow: none; }
+        .dialog { border-radius: 18px; border: 1px solid rgba(99,102,241,0.35); background: rgba(2,6,23,0.75); box-shadow: 0 10px 28px rgba(2,6,23,0.55), 0 0 20px rgba(99,102,241,0.18); }
+        .dialog-header { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; border-bottom: 1px solid rgba(148,163,184,0.2); }
+        .badge { padding: .35rem .6rem; border-radius: 999px; font-size: .85rem; background: linear-gradient(90deg,#22d3ee,#a78bfa); color: #0b1220; }
+        .badge--ai { background: linear-gradient(90deg,#ef4444,#f59e0b); color: #0b1220; }
+        .badge--human { background: linear-gradient(90deg,#10b981,#22d3ee); color: #0b1220; }
+        .dialog-body { padding: .9rem 1rem; }
+        .summary { color: #cbd5e1; margin-bottom: .5rem; }
+        pre { background: rgba(2,6,23,0.9); color: #e2e8f0; padding: 1rem; border-radius: 14px; overflow: auto; border: 1px solid rgba(99,102,241,0.35); box-shadow: 0 0 0 1px rgba(99,102,241,0.25) inset, 0 8px 24px rgba(59,130,246,0.25), 0 0 16px rgba(139,92,246,0.2); }
+        #copy { margin-left: auto; padding: .6rem .85rem; border: none; border-radius: 12px; background: linear-gradient(90deg, #22d3ee, #a78bfa); color: #0b1220; cursor: pointer; box-shadow: 0 8px 18px rgba(34,211,238,0.35), 0 0 12px rgba(167,139,250,0.3); }
         .row { display: grid; grid-template-columns: 1fr; gap: 1rem; }
         @media (min-width: 640px) { .row { grid-template-columns: 1fr 1fr; } }
-        .small { font-size: .85rem; color: #555; }
+        .small { font-size: .95rem; color: #94a3b8; }
       </style>
       <script>
         if ('serviceWorker' in navigator) {
@@ -197,7 +250,16 @@ def app_page():
         </div>
         <button id="send">Detect</button>
         <div id="out" style="margin-top:1rem;">
-          <pre id="result">{ "status": "waiting for input" }</pre>
+          <div class="dialog">
+            <div class="dialog-header">
+              <span id="status-badge" class="badge">Ready</span>
+              <button id="copy">Copy</button>
+            </div>
+            <div class="dialog-body">
+              <div class="summary" id="summary-text">Awaiting input</div>
+              <pre id="result">{ "status": "ready" }</pre>
+            </div>
+          </div>
         </div>
         <p class="small">Or paste Base64 audio below (optional):</p>
         <textarea id="base64" rows="4" placeholder="Base64 audio string"></textarea>
@@ -237,6 +299,26 @@ def app_page():
           }
         }
         document.getElementById('send').addEventListener('click', detect);
+        document.getElementById('copy').addEventListener('click', async () => {
+          const txt = document.getElementById('result').textContent;
+          try { await navigator.clipboard.writeText(txt); } catch(e) {}
+        });
+        function renderSummary(obj) {
+          const badge = document.getElementById('status-badge');
+          const summary = document.getElementById('summary-text');
+          badge.className = 'badge';
+          if (obj && typeof obj === 'object' && obj.classification) {
+            const cls = String(obj.classification);
+            const conf = typeof obj.confidence_score === 'number' ? Math.round(obj.confidence_score * 100) / 100 : obj.confidence_score;
+            summary.textContent = `${cls} • ${conf}`;
+            badge.textContent = cls;
+            if (/AI-Generated/i.test(cls)) badge.className = 'badge badge--ai';
+            if (/Human/i.test(cls)) badge.className = 'badge badge--human';
+          } else {
+            summary.textContent = 'Response';
+            badge.textContent = 'JSON';
+          }
+        }
       </script>
     </body>
     </html>
@@ -308,4 +390,4 @@ async def detect_voice(request: AudioRequest):
         raise HTTPException(status_code=500, detail="Internal Server Error processing audio")
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
